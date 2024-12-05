@@ -6,9 +6,11 @@ pub mod day3a;
 pub mod day3b;
 pub mod day4a;
 pub mod day4b;
+pub mod day5a;
+pub mod day5b;
 
 fn main() {
-    let module = "day4b";
+    let module = "day5b";
 
     match module {
         "day1a" => day1a::run(),
@@ -19,6 +21,8 @@ fn main() {
         "day3b" => day3b::run(),
         "day4a" => day4a::run(),
         "day4b" => day4b::run(),
+        "day5a" => day5a::run(),
+        "day5b" => day5b::run(),
         _=> println!("Invalid module"),
     }
 }
