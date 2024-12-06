@@ -141,7 +141,6 @@ pub fn run() {
     }
 
     let mut looping_instances = 0;
-    let mut count = 0;
 
     for visited in map.visited.clone() {
         let mut copied_map = Map {
@@ -161,8 +160,6 @@ pub fn run() {
         copied_map.obstacles.push(visited);
     
         looping_instances += copied_map.does_loop() as i32;
-        count += 1;
-        println!("{} - {:?}: Possible obstacle count: {}", count, visited, looping_instances);
     }
 
     println!("Possible obstacle count: {looping_instances}");
