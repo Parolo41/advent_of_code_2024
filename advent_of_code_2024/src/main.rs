@@ -12,9 +12,14 @@ pub mod day6a;
 pub mod day6b;
 pub mod day7a;
 pub mod day7b;
+pub mod day8a;
+pub mod day8b;
 
 fn main() {
-    let module = "day7b";
+    use std::time::Instant;
+    let now = Instant::now();
+
+    let module = "day8b";
 
     match module {
         "day1a" => day1a::run(),
@@ -31,6 +36,11 @@ fn main() {
         "day6b" => day6b::run(),
         "day7a" => day7a::run(),
         "day7b" => day7b::run(),
+        "day8a" => day8a::run(),
+        "day8b" => day8b::run(),
         _=> println!("Invalid module"),
     }
+
+    let elapsed = now.elapsed();
+    println!("Elapsed: {:.2?}", elapsed);
 }
