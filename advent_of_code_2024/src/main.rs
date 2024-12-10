@@ -14,12 +14,16 @@ pub mod day7a;
 pub mod day7b;
 pub mod day8a;
 pub mod day8b;
+pub mod day9a;
+pub mod day9b;
+pub mod day10a;
+pub mod day10b;
 
 fn main() {
     use std::time::Instant;
     let now = Instant::now();
 
-    let module = "day8b";
+    let module = "day10b";
 
     match module {
         "day1a" => day1a::run(),
@@ -38,6 +42,10 @@ fn main() {
         "day7b" => day7b::run(),
         "day8a" => day8a::run(),
         "day8b" => day8b::run(),
+        "day9a" => day9a::run(),
+        "day9b" => day9b::run(),
+        "day10a" => day10a::run(),
+        "day10b" => day10b::run(),
         _=> println!("Invalid module"),
     }
 
