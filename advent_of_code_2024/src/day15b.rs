@@ -36,30 +36,84 @@ struct Map {
 
 impl Map {
     fn do_move(&mut self, dir: Dir) {
-        let dest = self.get(dir.apply(self.player));
-
-        match dest {
-            b'.' => self.player = dir.apply(self.player),
-            b'#' => (),
-            b'[' => if self.push(dir.apply(self.player), dir) {
-                self.set(dir.apply(self.player), b'.');
-                self.player = dir.apply(self.player);
-            },
-            _ => panic!("Invalid map tile"),
+        if self.push(dir.apply(self.player), dir) {
+            self.player = dir.apply(self.player);
         }
     }
 
     fn push(&mut self, pos: (usize, usize), dir: Dir) -> bool {
-        let dest = self.get(dir.apply(pos));
+        let here = self.get(pos);
 
-        match dest {
-            b'.' => {
-                self.set(dir.apply(pos), b'O');
-                true
+        match here {
+            b'.' => return true,
+            b'#' => return false,
+            b'[' | b']' => {
+                match dir {
+                    Dir::Up | Dir::Down => {
+                        let (left, right, other_pos): ((usize, usize), (usize, usize), (usize, usize));
+                        if here == b'[' {
+                            left = dir.apply(pos);
+                            right = (left.0, left.1 + 1);
+                            other_pos = (pos.0, pos.1 + 1);
+                        } else {
+                            right = dir.apply(pos);
+                            left = (right.0, right.1 - 1);
+                            other_pos = (pos.0, pos.1 - 1);
+                        }
+
+                        if self.pushable(left, dir) && self.pushable(right, dir) {
+                            self.push(left, dir);
+                            self.push(right, dir);
+                            self.set(pos, b'.');
+                            self.set(other_pos, b'.');
+                            self.set(left, b'[');
+                            self.set(right, b']');
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    },
+                    Dir::Right | Dir::Left => { 
+                        if self.push(dir.apply(pos), dir) {
+                            self.set(pos, b'.');
+                            self.set(dir.apply(pos), here);
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    },
+                }
             },
-            b'#' => false,
-            b'O' => self.push(dir.apply(pos), dir),
-            _ => panic!("Invalid map tile"),
+            _ => panic!("Invalid byte"),
+        }
+    }
+
+    fn pushable(&self, pos: (usize, usize), dir: Dir) -> bool {
+        let here = self.get(pos);
+
+        match here {
+            b'.' => return true,
+            b'#' => return false,
+            b'[' | b']' => {
+                match dir {
+                    Dir::Up | Dir::Down => {
+                        let (left, right): ((usize, usize), (usize, usize));
+                        if here == b'[' {
+                            left = dir.apply(pos);
+                            right = (left.0, left.1 + 1);
+                        } else {
+                            right = dir.apply(pos);
+                            left = (right.0, right.1 - 1);
+                        }
+
+                        return self.pushable(left, dir) && self.pushable(right, dir);
+                    },
+                    Dir::Right | Dir::Left => { 
+                        return self.pushable(dir.apply(pos), dir);
+                    },
+                }
+            },
+            _ => panic!("Invalid byte"),
         }
     }
 
@@ -88,9 +142,14 @@ pub fn run() {
 
         for (i, byte) in line.as_bytes().iter().enumerate() {
             if *byte == b'@' {
-                player = (height, i);
+                player = (height, i * 2);
                 byte_line.push(b'.');
+                byte_line.push(b'.');
+            } else if *byte == b'O' {
+                byte_line.push(b'[');
+                byte_line.push(b']');
             } else {
+                byte_line.push(*byte);
                 byte_line.push(*byte);
             }
         }
@@ -108,6 +167,7 @@ pub fn run() {
     while let Some(line) = lines.next() {
         for byte in line.as_bytes() {
             map.do_move(Dir::from_byte(*byte));
+            // print_map(&map);
         }
     }
 
@@ -115,13 +175,26 @@ pub fn run() {
 
     for (y, line) in map.tiles.iter().enumerate() {
         for (x, byte) in line.iter().enumerate() {
-            if *byte == b'O' {
+            if *byte == b'[' {
                 coord_sum += (y * 100) + x;
             }
-            print!("{}", *byte as char);
+        }
+    }
+
+    print_map(&map);
+
+    println!("Coordinates sum: {coord_sum}");
+}
+
+fn print_map(map: &Map) {
+    for (y, line) in map.tiles.iter().enumerate() {
+        for (x, byte) in line.iter().enumerate() {
+            if (y, x) == map.player {
+                print!("@");
+            } else {
+                print!("{}", *byte as char);
+            }
         }
         println!();
     }
-
-    println!("Coordinates sum: {coord_sum}");
 }
