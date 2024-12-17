@@ -64,7 +64,7 @@ impl PathRegistry {
 
         for (i, old_step) in temp_steps.into_iter().enumerate() {
             if old_step.x == new_step.x && old_step.y == new_step.y {
-                if new_step.score < old_step.score {
+                if new_step.score <= old_step.score {
                     self.steps.remove(i);
                     self.steps.push(new_step.clone());
                     return true;
@@ -117,18 +117,27 @@ pub fn run() {
     };
     path_registry.is_new_or_better(&first_step);
     let mut paths = vec![vec![first_step]];
+    let mut best_paths = Vec::new();
 
     while let Some(path) = paths.pop() {
         let last_step = path.last().unwrap();
 
-        if is_end(&last_step, &tiles) && (best_score == 0 || best_score > last_step.score) {
-            best_score = last_step.score;
-            println!("Path finished");
-            continue;
+        if is_end(&last_step, &tiles) {
+            if best_score == 0 || best_score > last_step.score {
+                best_score = last_step.score;
+                println!("Path finished");
+
+                best_paths = Vec::new();
+                best_paths.push(path);
+                continue;
+            } else if best_score == last_step.score {
+                best_paths.push(path);
+                continue;
+            }
         }
 
         for dir in Dir::all() {
-            let next_step = last_step.go_to(dir);
+            let mut next_step = last_step.go_to(dir);
 
             if is_valid(&next_step, &tiles) && !contains(&next_step, &path) {
                 if path_registry.is_new_or_better(&next_step) {
@@ -136,13 +145,22 @@ pub fn run() {
                     cloned_path.push(next_step);
                     paths.push(cloned_path);
                 } else {
-                    let next_next_step = next_step.go_to(dir);
+                    let mut cloned_path = path.clone();
+                    cloned_path.push(next_step.clone());
 
-                    if is_valid(&next_next_step, &tiles) && path_registry.is_new_or_better(&next_next_step) {
-                        let mut cloned_path = path.clone();
-                        cloned_path.push(next_step);
-                        cloned_path.push(next_next_step);
-                        paths.push(cloned_path);
+                    loop {
+                        next_step = next_step.go_to(dir);
+
+                        if is_valid(&next_step, &tiles) && !contains(&next_step, &path) {
+                            cloned_path.push(next_step.clone());
+
+                            if path_registry.is_new_or_better(&next_step) {
+                                paths.push(cloned_path);
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
                     }
                 }
             }
@@ -150,6 +168,20 @@ pub fn run() {
     }
 
     println!("Best score: {best_score}");
+
+    let mut possible_seats = Vec::new();
+
+    for path in best_paths.clone() {
+        for step in path {
+            let pos = (step.x, step.y);
+
+            if !possible_seats.contains(&pos) {
+                possible_seats.push(pos);
+            }
+        }
+    }
+
+    println!("Possible seats: {} in {} paths", possible_seats.len(), best_paths.len());
 }
 
 fn is_valid(step: &Step, tiles: &Vec<Vec<u8>>) -> bool {
